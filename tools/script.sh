@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to the database file
-database_file="/full/path/to/cedict_ts.u8"
+database_file="/full/path/to/db.u8"
 
 # Read the file line by line
 while IFS= read -r line; do
@@ -20,6 +20,15 @@ while IFS= read -r line; do
 
     # Extract the definitions
     DEFINITIONS=$(echo "$temp" | awk -F '/' '{for (i=2; i<=NF; i++) print $i}')
+
+    # Check if TW transcription is present
+    if [[ "$DEFINITIONS" == *"Taiwan pr. ["* ]]; then
+        # Extract TW transcription
+        TWTRANSCRIPTION=$(echo "$DEFINITIONS" | awk -F 'Taiwan pr. \\[' '{print $2}' | awk -F '\\]' '{print $1}' | tr -d '\n')
+        if [[ ! -z "$TWTRANSCRIPTION" ]]; then
+            echo "TW: $TWTRANSCRIPTION"
+        fi
+    fi
 
     # Print the variables with multiple definitions on separate lines
     echo "Traditional: $TRADITIONAL"
