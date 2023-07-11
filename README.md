@@ -1,6 +1,5 @@
-# cc-cedict-tw
-自由詞典
-An attempt to make a dictionary that doesn't ratify the vocabulary or pronounciations of the People's Republic of China, but instead endorse vocabulary used in free areas.
+# 自由詞典
+## An attempt to make a dictionary that doesn't ratify the vocabulary or pronounciations of the People's Republic of China, but instead endorse vocabulary used in free areas.
 
 Specifically, this dictionary will have the followding main differeces/goals compared to CC-CEDICT:
  - Use the pronounciation from the Republic of China (Taiwan) where applicable
