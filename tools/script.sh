@@ -10,11 +10,16 @@ while IFS= read -r line; do
         continue
     fi
 
-    # Extract fields from the line
+    # Extract traditional and simplified
     TRADITIONAL=$(echo "$line" | awk -F ' ' '{print $1}')
     SIMPLIFIED=$(echo "$line" | awk -F ' ' '{print $2}')
-    TRANSCRIPTION=$(echo "$line" | grep -o '\[.*\]' | tr -d '[]')
-    DEFINITIONS=$(echo "$line" | awk -F '/' '{for (i=2; i<=NF; i++) print $i}')
+
+    # Extract the transcription
+    temp="${line}"
+    TRANSCRIPTION=$(echo "$temp" | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
+
+    # Extract the definitions
+    DEFINITIONS=$(echo "$temp" | awk -F '/' '{for (i=2; i<=NF; i++) print $i}')
 
     # Print the variables with multiple definitions on separate lines
     echo "Traditional: $TRADITIONAL"
