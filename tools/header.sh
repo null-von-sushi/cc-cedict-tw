@@ -20,6 +20,7 @@ count=$(awk '!/^#/ && NF > 0 { count++ } END { print count }' "$file")
 
 echo "Number of non-empty lines (excluding lines starting with '#'): $count"
 
+# todo: add to db
 header_one=(
 "# CC-CEDICT-TW"
 "# 自由詞典"
