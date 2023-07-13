@@ -169,14 +169,6 @@ for arg in "$@"; do
   --output=*)
     output_file="${arg#*=}"
     ;;
-  --create)
-    if [ "$read_flag" = true ]; then
-      echo "Error: Cannot use --create and --read together."
-      exit 1
-    fi
-    create_flag=true
-    create_db
-    ;;
   --read)
     if [ "$create_flag" = true ]; then
       echo "Error: Cannot use --create and --read together."
@@ -188,11 +180,20 @@ for arg in "$@"; do
   --help)
     help_flag=true
     printf "%s\n" "${help_lines[@]}"
+    exit
     ;;
   "")
     # Handle unrecognized arguments or show usage
     echo -e "Error: No action specified. Use --create or --read.\n"
     exit 1
+    ;;
+  --create)
+    if [ "$read_flag" = true ]; then
+      echo "Error: Cannot use --create and --read together."
+      exit 1
+    fi
+    create_flag=true
+    create_db
     ;;
   *)
     # Handle unrecognized arguments or show usage
