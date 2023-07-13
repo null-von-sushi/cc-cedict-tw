@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to the database
-database="/home/sysop/Documents/GitHub/cc-cedict-tw/tools/tmp/cc-cedict-tw_mini.u8"
+database="/home/sysop/Documents/GitHub/cc-cedict-tw/tools/tmp/cc-cedict-tw.u8"
 
 # Iterate over each line in the database
 while IFS= read -r line; do
@@ -23,19 +23,19 @@ while IFS= read -r line; do
     temp_dictionaryentry=$(grep "$temp_hanzi \[" "$database")
     if [ -n "$(echo "$temp_dictionaryentry" | grep "PRC pr. \[")" ]; then
       if [ -n "$temp_dictionaryentry" ]; then
+        # mostly debug output
         echo "Reference found: $temp_full"
         echo "Original Pinyin: $temp_pinyin"
-        echo "Hanzi: $temp_hanzi"
+        echo "Hanzi (Simplified): $temp_hanzi"
         echo "Relevant dictionary entry/entries: $temp_dictionaryentry"
-        echo "Line is $line"
-
+        echo "Line is: $line"
         # Construct the new line with the desired format
-        echo fucking work please
-        temp_new="垃圾[le4 se4]"
-
+        temp_new_pinyin=$(perl -ne "print if /[^\x00-\x7F]+\\s\Q$temp_hanzi\E\\s\\[([^\\]]+)\\]/" $database | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
+        temp_new_hanzi="$temp_hanz"
+        temp_new="[$temp_new_pinyin]"
         new_line=$(echo "$line" | perl -pe 's/\Q'"$temp_full"'\E/'"$temp_new"'/g')
 
-        echo "$new_line"
+        echo "New line will be: $new_line"
 
       else
 
