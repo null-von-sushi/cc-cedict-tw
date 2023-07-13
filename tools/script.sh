@@ -5,10 +5,7 @@
 
 # Used for parameters
 read_flag=false
-create_flag=false
-
-help_flag=false
-output_file_format="u8"
+header_flag=false
 
 # Function to replace text after Chinese characters with correct transcription
 replace_transcriptions() {
@@ -245,9 +242,6 @@ for arg in "$@"; do
     fi
     read_flag=true
     read_db
-    ;;
-  --format=*)
-    output_file_format="${arg#*=}"
     ;;
   "")
     # Handle unrecognized arguments or show usage
