@@ -6,6 +6,7 @@
 # Used for parameters
 read_flag=false
 header_flag=false
+output_file_format="u8"
 
 # Function to replace text after Chinese characters with correct transcription
 replace_transcriptions() {
@@ -92,9 +93,16 @@ read_db() {
 
 # code for creating a new DB
 create_db() {
+  echo $output_file_format
+
+  # only accept valid file formats
+  if [[ $output_file_format != "u8" && $output_file_format != "pleco" ]]; then
+    echo "Error: Invalid output file format \"$output_file_format\"."
+    exit 1
+  fi
 
   #to prevent bugs and garbage output
-  rm $output_file
+  rm -f $output_file
 
   # Read the file line by line
   while IFS= read -r line; do
@@ -223,6 +231,7 @@ help_lines=(
 )
 
 # Parse command line arguments
+# Parameters for settings first
 for arg in "$@"; do
   case $arg in
   --input=*)
@@ -231,6 +240,22 @@ for arg in "$@"; do
   --output=*)
     output_file="${arg#*=}"
     ;;
+  --format=*)
+    output_file_format="${arg#*=}"
+    ;;
+  esac
+done
+
+# Parse command line arguments
+# Actions second
+for arg in "$@"; do
+  case $arg in
+  --input=*) ;;
+
+  --output=*) ;;
+
+  --format=*) ;;
+
   --help)
     help_flag=true
     printf "%s\n" "${help_lines[@]}"
