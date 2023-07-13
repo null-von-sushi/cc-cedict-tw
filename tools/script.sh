@@ -1,10 +1,12 @@
 #!/bin/bash
 
-checkline=60
+# set this to a line to force --read to only read that specific line. WIP feature, will be used for something later
+# checkline=60
 
 # Used for parameters
-create_flag=false
 read_flag=false
+header_flag=false
+output_file_format="u8"
 
 # Function to replace text after Chinese characters with correct transcription
 replace_transcriptions() {
@@ -91,6 +93,16 @@ read_db() {
 
 # code for creating a new DB
 create_db() {
+
+  # only accept valid file formats
+  if [[ $output_file_format != "u8" && $output_file_format != "pleco" ]]; then
+    echo "Error: Invalid output file format \"$output_file_format\"."
+    exit 1
+  fi
+
+  #to prevent bugs and garbage output
+  rm -f $output_file
+
   # Read the file line by line
   while IFS= read -r line; do
     # Skip comment lines starting with '#'
@@ -133,17 +145,93 @@ create_db() {
     DEFINITIONS_SAVED="/${DEFINITIONS_SAVED//$'\n'//}/"
 
     # Write the extracted data to the output file
-    if [[ -z "$TWTRANSCRIPTION" ]]; then
-      echo "$TRADITIONAL  $SIMPLIFIED [$TRANSCRIPTION] $DEFINITIONS_SAVED" >>"$output_file"
+    if [ "$output_file_format" == "u8" ]; then
+      # u8 / CC-CEDICT format
+      if [[ -z "$TWTRANSCRIPTION" ]]; then
+        echo "$TRADITIONAL  $SIMPLIFIED [$TRANSCRIPTION] $DEFINITIONS_SAVED" >>"$output_file"
+      else
+        echo "$TRADITIONAL  $SIMPLIFIED [$TWTRANSCRIPTION] $DEFINITIONS_SAVED" >>"$output_file"
+      fi
+    elif [ "$output_file_format" == "pleco" ]; then
+      if [[ -z "$TWTRANSCRIPTION" ]]; then
+        echo "$SIMPLIFIED[$TRADITIONAL]	$TRANSCRIPTION	$DEFINITIONS_SAVED" >>"$output_file"
+      else
+        echo "$SIMPLIFIED[$TRADITIONAL]	$TWTRANSCRIPTION	$DEFINITIONS_SAVED" >>"$output_file"
+      fi
     else
-      echo "$TRADITIONAL  $SIMPLIFIED [$TWTRANSCRIPTION] $DEFINITIONS_SAVED" >>"$output_file"
+      echo "Error writing data: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
     fi
-  done <"$database_file"
 
-  # Replace transcriptions in DEFINITIONS_SAVED
-  # mv "$output_file" "$output_file.tmp"
-  #replace_transcriptions < "$output_file.tmp" > "$output_file"
-  #rm "$output_file.tmp"
+  done \
+    < \
+    "$database_file"
+
+  # Write headers
+  if [ "$output_file_format" == "u8" ]; then
+    # u8 / CC-CEDICT format
+    # Count the number of non-empty lines that do not start with '#'
+    count=$(awk '!/^#/ && NF > 0 { count++ } END { print count }' "$output_file")
+
+    #echo "Number of non-empty lines (excluding lines starting with '#'): $count"
+
+    # Create a temporary file for the header
+    temp_dbfile=$(mktemp)
+    temp_headerfile=$(mktemp)
+    #header
+    header_one=(
+      "# CC-CEDICT-TW"
+      "# 自由詞典"
+      "# "
+      "# Based on, but not affiliated with, CC-CEDICT published by MDBG"
+      "# "
+      "# License:"
+      "# Creative Commons Attribution-ShareAlike 4.0 International License"
+      "# https://creativecommons.org/licenses/by-sa/4.0/"
+      "# "
+      "# Referenced works:"
+      "# CEDICT - Copyright (C) 1997, 1998 Paul Andrew Denisowski"
+      "# CC-CEDICT - CC BY-SA 4.0 (https://www.mdbg.net/chinese/dictionary?page=cc-cedict)"
+      "# "
+      "# CC-CEDICT-TW can be found at:"
+      "# https://github.com/null-von-sushi/cc-cedict-tw"
+      "# "
+      "# ")
+
+    # Redirect the header to the temporary file we made
+    {
+      printf "%s\n" "${header_one[@]}"
+      echo "#! version=0"
+      echo "#! subversion=1"
+      echo "#! format=ts"
+      echo "#! charset=UTF-8"
+      echo "#! entries=$count"
+      echo "#! license=https://creativecommons.org/licenses/by-sa/4.0/"
+      echo "#! date=$(date -u +\"%Y-%m-%dT%H:%M:%S%Z\")"
+      echo "#! time=$(date +%s)"
+    } >"$temp_headerfile"
+
+    # Merge the deader and database we just made into a new temporary db file
+    cat "$temp_headerfile" $output_file >$temp_dbfile
+    # Replace DB with the new one we just made
+    mv $temp_dbfile $output_file # Overwrite db with the version containing the combined output
+
+    #  Remove the temporary files
+    rm "$temp_headerfile"
+
+    # fix formatting issues
+    # this one is for extra linebreaks and spaces at the end
+    sed -i -e 's/[[:space:]]*$//' -e '${/^$/d;}' $output_file
+
+    # this one is for the spacing between simp and trad
+    temp_dbfile=$(mktemp)
+    awk '{gsub(/[[:space:]]+/," ")}1' $output_file >$temp_dbfile
+    mv $temp_dbfile $output_file # replace db with the version we just fixed
+  elif [ "$output_file_format" == "pleco" ]; then
+    echo "Skipping header as Pleco does not use any"
+  else
+    echo "Error writing headers: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
+  fi
+
 }
 
 help_lines=(
@@ -157,11 +245,13 @@ help_lines=(
   "--help     Shows this screen"
   "--input    Path to input file"
   "--output   Select where to save result of --create"
+  "--format   Select between \"u8\" (default) and \"pleco\" formats for output file"
   "--create   Create a new database file"
   "--read     Don't create anything, just read an existing database file"
 )
 
 # Parse command line arguments
+# Parameters for settings first
 for arg in "$@"; do
   case $arg in
   --input=*)
@@ -170,13 +260,26 @@ for arg in "$@"; do
   --output=*)
     output_file="${arg#*=}"
     ;;
-  --create)
-    if [ "$read_flag" = true ]; then
-      echo "Error: Cannot use --create and --read together."
-      exit 1
-    fi
-    create_flag=true
-    create_db
+  --format=*)
+    output_file_format="${arg#*=}"
+    ;;
+  esac
+done
+
+# Parse command line arguments
+# Actions second
+for arg in "$@"; do
+  case $arg in
+  --input=*) ;;
+
+  --output=*) ;;
+
+  --format=*) ;;
+
+  --help)
+    help_flag=true
+    printf "%s\n" "${help_lines[@]}"
+    exit
     ;;
   --read)
     if [ "$create_flag" = true ]; then
@@ -186,14 +289,18 @@ for arg in "$@"; do
     read_flag=true
     read_db
     ;;
-  --help)
-    help_flag=true
-    printf "%s\n" "${help_lines[@]}"
-    ;;
   "")
     # Handle unrecognized arguments or show usage
     echo -e "Error: No action specified. Use --create or --read.\n"
     exit 1
+    ;;
+  --create)
+    if [ "$read_flag" = true ]; then
+      echo "Error: Cannot use --create and --read together."
+      exit 1
+    fi
+    create_flag=true
+    create_db
     ;;
   *)
     # Handle unrecognized arguments or show usage
