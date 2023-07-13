@@ -217,6 +217,7 @@ help_lines=(
   "--help     Shows this screen"
   "--input    Path to input file"
   "--output   Select where to save result of --create"
+  "--format   Select between \"u8\" (default) and \"pleco\" formats for output file"
   "--create   Create a new database file"
   "--read     Don't create anything, just read an existing database file"
 )
