@@ -141,9 +141,9 @@ create_db() {
   done <"$database_file"
 
   # Replace transcriptions in DEFINITIONS_SAVED
-  mv "$output_file" "$output_file.tmp"
-  replace_transcriptions <"$output_file.tmp" >"$output_file"
-  rm "$output_file.tmp"
+  # mv "$output_file" "$output_file.tmp"
+  #replace_transcriptions < "$output_file.tmp" > "$output_file"
+  #rm "$output_file.tmp"
 }
 
 help_lines=(
