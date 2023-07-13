@@ -3,7 +3,6 @@
 checkline=60
 
 # Used for parameters
-create_flag=false
 read_flag=false
 
 # Function to replace text after Chinese characters with correct transcription
