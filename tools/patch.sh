@@ -31,12 +31,7 @@ while IFS= read -r line; do
 
         # Construct the new line with the desired format
         echo fucking work please
-        line="圾  圾 [se4] /used in 垃圾[la1 ji1]/PRC pr. [ji1]/"
         temp_new="垃圾[le4 se4]"
-        temp_full="垃圾[la1 ji1]"
-        temp_pinyin="[la1 ji1]"
-        temp_hanzi="垃圾"
-        tmpse="le4 se4"
 
         new_line=$(echo "$line" | perl -pe 's/\Q'"$temp_full"'\E/'"$temp_new"'/g')
 
