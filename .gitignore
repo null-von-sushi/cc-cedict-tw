@@ -1,2 +1,3 @@
 
 *.u8
+tools/tmp/cc-cedict-tw.u8.blacklist
