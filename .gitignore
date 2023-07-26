@@ -1,2 +1,4 @@
 
 *.u8
+tools/tmp/db.u8.bak
+tools/tmp/cc-cedict-tw.u8.blacklist
