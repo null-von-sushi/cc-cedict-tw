@@ -1,0 +1,93 @@
+#!/bin/bash
+echo "input file will be output of last process: $output_file"
+
+# Function to check if a line exists in the file
+line_exists() {
+    grep -Fq "$1" "$output_file"
+}
+
+# Function to replace a line with another using awk
+replace_line() {
+    1=$(echo "$1" | sed 's/\[/\\\[/g' | sed 's/\]/\\\]/g')
+    2=$(echo "$2" | sed 's/\[/\\\[/g' | sed 's/\]/\\\]/g')
+    awk -i inplace -v old="$1" -v new="$2" '{gsub(old, new)} 1' "$output_file"
+}
+
+# reserve temp file
+temp_filtered_content=$(mktemp)
+
+# Split `和 和 [he2] /(joining two nouns) and; together with; with (Taiwan pr. [han4])/(math.) sum/to make peace/(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/`
+if line_exists "和 和 [he2] /(joining two nouns) and; together with; with (Taiwan pr. [han4])/(math.) sum/to make peace/(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/"; then
+    remove_line="和 和 [he2] /(joining two nouns) and; together with; with (Taiwan pr. [han4])/(math.) sum/to make peace/(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/"
+    replacement_line1="和 和 [han4] /(joining two nouns) and; together with; with/(math.) sum/PRC pr. [he2]/"
+    replacement_line2="和 和 [he2] /(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/"
+    temp_filtered_content=$(mktemp)
+
+    # Use grep -v to exclude the lines containing the search string and save to another temp file
+    grep -Fv "$remove_line" "$output_file" >$temp_filtered_content
+
+    # Append the modified content to the filtered file
+    echo "$replacement_line1" >>$temp_filtered_content
+    echo "$replacement_line2" >>$temp_filtered_content
+
+    # Replace the original file with the modified content
+    mv $temp_filtered_content "$output_file"
+    echo $output_file
+    echo "Split 和 (\"with\", PRC version) into two entries, one for \"and\" and another for \"peace\""
+# Split `和 和 [han4] /(joining two nouns) and; together with; with (PRC pr. [he2])/(math.) sum/to make peace/(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/`
+elif line_exists "和 和 [han4] /(joining two nouns) and; together with; with (PRC pr. [he2])/(math.) sum/to make peace/(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/"; then
+    remove_line="和 和 [han4] /(joining two nouns) and; together with; with (PRC pr. [he2])/(math.) sum/to make peace/(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/"
+    replacement_line1="和 和 [han4] /(joining two nouns) and; together with; with/(math.) sum/PRC pr. [he2]/"
+    replacement_line2="和 和 [he2] /(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/"
+
+    # Use grep -Fv to exclude the lines containing the search string and save to another temp file. -F is necessary to make grep treat the string as a string, not regex.
+    grep -Fv "$remove_line" "$output_file" >$temp_filtered_content
+
+    # Append the modified content to the filtered file
+    echo "$replacement_line1" >>$temp_filtered_content
+    echo "$replacement_line2" >>$temp_filtered_content
+
+    # Replace the original file with the modified content
+    mv $temp_filtered_content "$output_file"
+    echo $output_file
+    echo "Split 和 (\"with\", ROC version) into two entries, one for \"and\" and another for \"peace\""
+else
+    echo "Error: The line \"和 和 [han4] /(joining two nouns)\" or \"和 和 [he2] /(joining two nouns)\" does not exist."
+    exit 1
+fi
+
+# Combine `和 和 [huo2] /to combine a powdery substance (flour, plaster etc) with water/Taiwan pr. [huo4]/` and `和 和 [huo4] /to mix (ingredients) together/to blend/classifier for rinses of clothes/classifier for boilings of medicinal herbs/`
+if line_exists "和 和 [huo2] /to combine a powdery substance (flour, plaster etc) with water/Taiwan pr. [huo4]/" && line_exists "和 和 [huo4] /to mix (ingredients) together/to blend/classifier for rinses of clothes/classifier for boilings of medicinal herbs/"; then
+    remove_line_1="和 和 [huo2] /to combine a powdery substance (flour, plaster etc) with water/Taiwan pr. [huo4]/"
+    remove_line_2="和 和 [huo4] /to mix (ingredients) together/to blend/classifier for rinses of clothes/classifier for boilings of medicinal herbs/"
+    replacement_line1="和 和 [huo4] /to combine a powdery substance (flour, plaster etc) with water (PRC pr. [huo2])/to mix (ingredients) together/to blend/classifier for rinses of clothes/classifier for boilings of medicinal herbs/"
+
+    # Use grep -Fv to exclude the lines containing the search string and save to another temp file. -F is necessary to make grep treat the string as a string, not regex.
+    grep -Fv "$remove_line_1" "$output_file" | grep -Fv "$remove_line_2" >$temp_filtered_content
+
+    # Append the modified content to the filtered file
+    echo "$replacement_line1" >>$temp_filtered_content
+
+    # Replace the original file with the modified content
+    mv $temp_filtered_content "$output_file"
+    echo $output_file
+    echo "Combined 和 (\"combine\" + \"mix\", PRC version) into one entry"
+elif line_exists "和 和 [huo4] /to combine a powdery substance (flour, plaster etc) with water/PRC pr. [huo2]/" && line_exists "和 和 [huo4] /to mix (ingredients) together/to blend/classifier for rinses of clothes/classifier for boilings of medicinal herbs/"; then
+    remove_line_1="和 和 [huo4] /to combine a powdery substance (flour, plaster etc) with water/PRC pr. [huo2]/"
+    remove_line_2="和 和 [huo4] /to mix (ingredients) together/to blend/classifier for rinses of clothes/classifier for boilings of medicinal herbs/"
+    replacement_line1="和 和 [huo4] /to combine a powdery substance (flour, plaster etc) with water (PRC pr. [huo2])/to mix (ingredients) together/to blend/classifier for rinses of clothes/classifier for boilings of medicinal herbs/"
+
+    # Use grep -Fv to exclude the lines containing the search string and save to another temp file. -F is necessary to make grep treat the string as a string, not regex.
+    grep -Fv "$remove_line_1" "$output_file" | grep -Fv "$remove_line_2" >$temp_filtered_content
+
+    # Append the modified content to the filtered file
+    echo "$replacement_line1" >>$temp_filtered_content
+
+    # Replace the original file with the modified content
+    mv $temp_filtered_content "$output_file"
+    echo $output_file
+    echo "Combined 和 (\"combine\" + \"mix\", ROC version) into one entry"
+else
+    echo "Error: The line \"和 和 [huo4] /to combine\" & \"和 和 [huo4] /to mix\" or \"和 和 [huo2] /to combine\" & \"和 和 [huo4] /to mix\" does not exist."
+    exit 1
+fi
