@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set this to a line to force --read to only read that specific line. WIP feature, will be used for something later
-# checkline=60
+checkline=39388
 
 # Used for parameters
 read_flag=false
@@ -94,17 +94,19 @@ read_db() {
 # code for creating a new DB
 create_db() {
 
-  # only accept valid file formats
-  if [[ $output_file_format != "u8" && $output_file_format != "pleco" ]]; then
-    echo "Error: Invalid output file format \"$output_file_format\"."
-    exit 1
-  fi
+  process_lineCreate() {
+    local line="$1"
+    # only accept valid file formats
+    if [[ $output_file_format != "u8" && $output_file_format != "pleco" ]]; then
+      echo "Error: Invalid output file format \"$output_file_format\"."
+      exit 1
+    fi
 
-  #to prevent bugs and garbage output
-  rm -f $output_file
+    #to prevent bugs and garbage output
+    rm -f $output_file
 
-  # Read the file line by line
-  while IFS= read -r line; do
+    # Read the file line by line
+
     # Skip comment lines starting with '#'
     if [[ $line =~ ^#.* ]]; then
       continue
@@ -125,7 +127,7 @@ create_db() {
     TWTRANSCRIPTION=""
 
     # Check if TW transcription is present
-    if [[ "$DEFINITIONS" == *"Taiwan pr. ["* ]]; then
+    if [[ "$DEFINITIONS" =~ "Taiwan pr\\. \\[[A-Za-z0-9 ]+\\]\\/" ]]; then
       # Extract TW transcription
       TWTRANSCRIPTION=$(echo "$DEFINITIONS" | awk -F 'Taiwan pr. \\[' '{print $2}' | awk -F '\\]' '{print $1}' | tr -d '\n')
       # Make a new definion for TW centric entries
@@ -162,74 +164,94 @@ create_db() {
       echo "Error writing data: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
     fi
 
-  done \
-    < \
-    "$database_file"
+    # Write headers
+    if [ "$output_file_format" == "u8" ]; then
+      # u8 / CC-CEDICT format
+      # Count the number of non-empty lines that do not start with '#'
+      count=$(awk '!/^#/ && NF > 0 { count++ } END { print count }' "$output_file")
 
-  # Write headers
-  if [ "$output_file_format" == "u8" ]; then
-    # u8 / CC-CEDICT format
-    # Count the number of non-empty lines that do not start with '#'
-    count=$(awk '!/^#/ && NF > 0 { count++ } END { print count }' "$output_file")
+      #echo "Number of non-empty lines (excluding lines starting with '#'): $count"
 
-    #echo "Number of non-empty lines (excluding lines starting with '#'): $count"
+      # Create a temporary file for the header
+      temp_dbfile=$(mktemp)
+      temp_headerfile=$(mktemp)
+      #header
+      header_one=(
+        "# CC-CEDICT-TW"
+        "# 自由詞典"
+        "# "
+        "# Based on, but not affiliated with, CC-CEDICT published by MDBG"
+        "# "
+        "# License:"
+        "# Creative Commons Attribution-ShareAlike 4.0 International License"
+        "# https://creativecommons.org/licenses/by-sa/4.0/"
+        "# "
+        "# Referenced works:"
+        "# CEDICT - Copyright (C) 1997, 1998 Paul Andrew Denisowski"
+        "# CC-CEDICT - CC BY-SA 4.0 (https://www.mdbg.net/chinese/dictionary?page=cc-cedict)"
+        "# "
+        "# CC-CEDICT-TW can be found at:"
+        "# https://github.com/null-von-sushi/cc-cedict-tw"
+        "# "
+        "# ")
 
-    # Create a temporary file for the header
-    temp_dbfile=$(mktemp)
-    temp_headerfile=$(mktemp)
-    #header
-    header_one=(
-      "# CC-CEDICT-TW"
-      "# 自由詞典"
-      "# "
-      "# Based on, but not affiliated with, CC-CEDICT published by MDBG"
-      "# "
-      "# License:"
-      "# Creative Commons Attribution-ShareAlike 4.0 International License"
-      "# https://creativecommons.org/licenses/by-sa/4.0/"
-      "# "
-      "# Referenced works:"
-      "# CEDICT - Copyright (C) 1997, 1998 Paul Andrew Denisowski"
-      "# CC-CEDICT - CC BY-SA 4.0 (https://www.mdbg.net/chinese/dictionary?page=cc-cedict)"
-      "# "
-      "# CC-CEDICT-TW can be found at:"
-      "# https://github.com/null-von-sushi/cc-cedict-tw"
-      "# "
-      "# ")
+      # Redirect the header to the temporary file we made
+      {
+        printf "%s\n" "${header_one[@]}"
+        echo "#! version=0"
+        echo "#! subversion=1"
+        echo "#! format=ts"
+        echo "#! charset=UTF-8"
+        echo "#! entries=$count"
+        echo "#! license=https://creativecommons.org/licenses/by-sa/4.0/"
+        echo "#! date=$(date -u +\"%Y-%m-%dT%H:%M:%S%Z\")"
+        echo "#! time=$(date +%s)"
+      } >"$temp_headerfile"
 
-    # Redirect the header to the temporary file we made
-    {
-      printf "%s\n" "${header_one[@]}"
-      echo "#! version=0"
-      echo "#! subversion=1"
-      echo "#! format=ts"
-      echo "#! charset=UTF-8"
-      echo "#! entries=$count"
-      echo "#! license=https://creativecommons.org/licenses/by-sa/4.0/"
-      echo "#! date=$(date -u +\"%Y-%m-%dT%H:%M:%S%Z\")"
-      echo "#! time=$(date +%s)"
-    } >"$temp_headerfile"
+      # Merge the deader and database we just made into a new temporary db file
+      cat "$temp_headerfile" $output_file >$temp_dbfile
+      # Replace DB with the new one we just made
+      mv $temp_dbfile $output_file # Overwrite db with the version containing the combined output
 
-    # Merge the deader and database we just made into a new temporary db file
-    cat "$temp_headerfile" $output_file >$temp_dbfile
-    # Replace DB with the new one we just made
-    mv $temp_dbfile $output_file # Overwrite db with the version containing the combined output
+      #  Remove the temporary files
+      rm "$temp_headerfile"
 
-    #  Remove the temporary files
-    rm "$temp_headerfile"
+      # fix formatting issues
+      # this one is for extra linebreaks and spaces at the end
+      sed -i -e 's/[[:space:]]*$//' -e '${/^$/d;}' $output_file
 
-    # fix formatting issues
-    # this one is for extra linebreaks and spaces at the end
-    sed -i -e 's/[[:space:]]*$//' -e '${/^$/d;}' $output_file
+      # this one is for the spacing between simp and trad
+      temp_dbfile=$(mktemp)
+      awk '{gsub(/[[:space:]]+/," ")}1' $output_file >$temp_dbfile
+      mv $temp_dbfile $output_file # replace db with the version we just fixed
+    elif [ "$output_file_format" == "pleco" ]; then
+      echo "Skipping header as Pleco does not use any"
+    else
+      echo "Error writing headers: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
+    fi
+  }
 
-    # this one is for the spacing between simp and trad
-    temp_dbfile=$(mktemp)
-    awk '{gsub(/[[:space:]]+/," ")}1' $output_file >$temp_dbfile
-    mv $temp_dbfile $output_file # replace db with the version we just fixed
-  elif [ "$output_file_format" == "pleco" ]; then
-    echo "Skipping header as Pleco does not use any"
+  if [[ -n "$checkline" ]]; then
+    line=$(sed "${checkline}q;d" "$database_file")
+    if [[ -z "$line" ]]; then
+      echo "Invalid line number: $checkline"
+      exit 1
+    fi
+
+    # Call the function to process the specific line
+    process_lineCreate "$line"
+
   else
-    echo "Error writing headers: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
+    while IFS= read -r line; do
+      # Skip comment lines starting with '#'
+      if [[ $line =~ ^#.* ]]; then
+        continue
+      fi
+
+      # Call the function to process each line
+      process_lineCreate "$line"
+
+    done <"$database_file"
   fi
 
 }
