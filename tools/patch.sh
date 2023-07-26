@@ -2,10 +2,10 @@
 
 # DEBUG: set this to a line to force --read to only read that specific line.
 #checkline=51
-#checkline=65
+#checkline=6072
 
 # Path to the database
-database="/home/sysop/Documents/GitHub/cc-cedict-tw/tools/tmp/cc-cedict-tw_mini.u8"
+database="/home/sysop/Documents/GitHub/cc-cedict-tw/tools/tmp/db.u8"
 databaseblacklist="$database.blacklist"
 
 # Iterate over each line in the database
@@ -17,7 +17,7 @@ processText() {
   temp_full=""
   temp_hanzi=""
   temp_pinyin=""
-
+  temp_is_simplified=""
   # try to extract both if possible
   temp_full=$(echo "$DEFINITIONS" | awk -F '|' 'match($0, /([A-Za-z0-9]|[^\x00-\x7F])+\|([A-Za-z0-9]|[^\x00-\x7F])+\[([^\]]+)\]/) {print substr($0, RSTART, RLENGTH)}')
   # If no traditional specifically is not available, fall back to alternative method which just gets any characters
@@ -26,6 +26,8 @@ processText() {
     temp_full=$(echo "$DEFINITIONS" | awk -F '|' 'match($0, /[^\x00-\x7F]+\[([^\]]+)\]/) {print substr($0, RSTART, RLENGTH)}')
     temp_pinyin=$(echo "$temp_full" | awk 'match($0, /\[([^\]]+)\]/) {print substr($0, RSTART, RLENGTH)}')
     temp_hanzi=$(echo "$temp_full" | awk 'match($0, /[^\x00-\x7F]+/) {print substr($0, RSTART, RLENGTH)}')
+    temp_is_simplified=true
+
   # if both are available, use both
   else
     # get traditional
@@ -75,13 +77,81 @@ processText() {
 
           # Check if the two words are even the same. We don't want [xi1] to randomly turn into [ge4 ben1 dong1 xi1]...
           if [ "$(echo "$temp_dictionaryentry" | awk -F ' ' '{print $1}')" = "$temp_hanzi_search" ]; then
-
             temp_new_pinyin=$(perl -ne "print if /[^\x00-\x7F]+\\s\Q$temp_hanzi\E\\s\\[([^\\]]+)\\]/" $database | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
+
+            # code to handle if more than one entry is found
+            # first, try to search by utilizing the traditional
+
+            if [[ $temp_is_simplified == true ]]; then
+              if [ -n "$(perl -ne "print if /[^\x00-\x7F]+\\s\Q$temp_hanzi\E\\s\\[([^\\]]+)\\]/" $database | grep "$temp_hanzi $temp_hanzi")" ]; then
+                echo aaaaaaa?
+              else
+                temp_new_pinyin=$(perl -ne "print if /[^\x00-\x7F]+\\s\Q$temp_hanzi\E\\s\\[([^\\]]+)\\]/" $database | grep "$temp_hanzi $temp_hanzi" | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
+              fi
+            fi
 
             # Construct the new line with the desired format (needs special treatment depending on whether we're using trad or simp strings)
             if [[ $temp_hanzi == *" "* ]]; then
               #trad
-              temp_new_pinyin=$(perl -ne "print if /\Q$temp_hanzi\E\\s\\[([^\\]]+)\\]/" $database | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
+              # this function checks if there are more than one line present, and if so, picks the one that doesn't say surname, or whichever is the longest.
+              # This is probably a bad idea, bug good enough for now
+              filterDataBaseEntries() {
+                result=""
+                # Capture the output of the Perl command into the $result variable
+                result=$(perl -ne "print if /\Q$temp_hanzi\E\s\[([^\]]+)\]/" "$database")
+
+                # Check if the result has more than one line
+                line_count=$(echo "$result" | wc -l)
+
+                if [ "$line_count" -gt 1 ]; then
+                  # Initialize variables to store the non-surname line and its length
+                  db_list_filtered=""
+                  max_length=0
+
+                  # Loop through each line and pick the one that does not mention "surname"
+                  while IFS= read -r line; do
+                    if [[ "$line" != *"surname"* ]]; then
+                      db_list_filtered="$line"
+                      # If the line is longer, update the max_length
+                      line_length=${#line}
+                      if [ "$line_length" -gt "$max_length" ]; then
+                        max_length="$line_length"
+                      fi
+                    fi
+                  done <<<"$result"
+
+                  # If no non-surname line found, pick the longest line
+                  if [ -z "$db_list_filtered" ]; then
+                    while IFS= read -r line; do
+                      line_length=${#line}
+                      if [ "$line_length" -gt "$max_length" ]; then
+                        max_length="$line_length"
+                        db_list_filtered="$line"
+                      fi
+                    done <<<"$result"
+                  fi
+
+                  # Check if there are still more than one line after the first selection
+                  remaining_line_count=$(echo "$result" | wc -l)
+                  if [ "$remaining_line_count" -gt 1 ]; then
+                    # Pick the longest line among the remaining lines
+                    while IFS= read -r line; do
+                      line_length=${#line}
+                      if [ "$line_length" -gt "$max_length" ]; then
+                        max_length="$line_length"
+                        db_list_filtered="$line"
+                      fi
+                    done <<<"$result"
+                  fi
+                else
+                  # If there's only one line, set it as db_list_filtered
+                  db_list_filtered="$result"
+                fi
+              }
+              filterDataBaseEntries
+
+              # Use the db_list_filtered variable and perform the other text stuff
+              temp_new_pinyin=$(echo $db_list_filtered | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
 
               #also change the temp_hanzi variable to only reference simp, should be safe to do now
               #temp_hanzi=$(echo $temp_hanzi | awk '{ sub(/[^ ]+ /, "") } 1')
@@ -90,7 +160,7 @@ processText() {
               temp_hanzi=$(echo $temp_hanzi | awk '{ sub(/ /, "|") } 1')
             else
               #simp
-              temp_new_pinyin=$(perl -ne "print if /[^\x00-\x7F]+\\s\Q$temp_hanzi\E\\s\\[([^\\]]+)\\]/" $database | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
+              temp_new_pinyin=$(perl -ne "print if /[^\x00-\x7F]+\\s\Q$temp_hanzi\E\\s\\[([^\\]]+)\\]/" $database | grep "$temp_hanzi $temp_hanzi" | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
             fi
 
             temp_new="$(echo -e $temp_hanzi\[$temp_new_pinyin\])"
