@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set this to a line to force --read to only read that specific line. WIP feature, will be used for something later
-checkline=39388
+checkline=500
 
 # Used for parameters
 read_flag=false
@@ -103,14 +103,7 @@ create_db() {
     fi
 
     #to prevent bugs and garbage output
-    rm -f $output_file
-
-    # Read the file line by line
-
-    # Skip comment lines starting with '#'
-    if [[ $line =~ ^#.* ]]; then
-      continue
-    fi
+    #rm -f $output_file
 
     # Extract traditional and simplified
     TRADITIONAL=$(echo "$line" | awk -F ' ' '{print $1}')
@@ -163,6 +156,33 @@ create_db() {
     else
       echo "Error writing data: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
     fi
+
+    # Finished building the DB using CC-CEDICT or similar as base
+
+    # execute scripts in ./extra/complex.first or complex.last folder. Intended for any changes to the DB base before other things are done
+    extra_complex() {
+
+      # Change directory to relevant folder
+      cd ./extra/$1/
+
+      # Loop through all files in the directory and execute them using source (.)
+      for file in *; do
+        # Check if the file is executable
+        if [ -x "$file" ]; then
+          # Execute the file using source
+          source ./"$file"
+          # You can also use the following line instead, which is equivalent:
+          # source ./"$file"
+        else
+          chmod +x ./"$file"
+          source ./"$file"
+        fi
+      done
+    }
+    extra_complex complex.first
+
+    # remove empty linebreaks before headers are written
+    sed -i '/^$/d' $output_file
 
     # Write headers
     if [ "$output_file_format" == "u8" ]; then
