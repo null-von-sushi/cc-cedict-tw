@@ -17,6 +17,7 @@ processText() {
   temp_full=""
   temp_hanzi=""
   temp_pinyin=""
+  SKIP_LINE=false
   temp_is_simplified=""
   # try to extract both if possible
   temp_full=$(echo "$DEFINITIONS" | awk -F '|' 'match($0, /([A-Za-z0-9]|[^\x00-\x7F])+\|([A-Za-z0-9]|[^\x00-\x7F])+\[([^\]]+)\]/) {print substr($0, RSTART, RLENGTH)}')
@@ -93,8 +94,8 @@ processText() {
             # Construct the new line with the desired format (needs special treatment depending on whether we're using trad or simp strings)
             if [[ $temp_hanzi == *" "* ]]; then
               #trad
-              # this function checks if there are more than one line present, and if so, picks the one that doesn't say surname, or whichever is the longest.
-              # This is probably a bad idea, bug good enough for now
+              # this function checks if there are more than one line present ~~, and if so, picks the one that doesn't say surname, or whichever is the longest.~~
+              # ~~This is probably a bad idea, bug good enough for now~~
               filterDataBaseEntries() {
                 result=""
                 # Capture the output of the Perl command into the $result variable
@@ -104,48 +105,50 @@ processText() {
                 line_count=$(echo "$result" | wc -l)
 
                 if [ "$line_count" -gt 1 ]; then
-                  # Initialize variables to store the non-surname line and its length
-                  db_list_filtered=""
-                  max_length=0
+                  SKIP_LINE=true
+                  # dont do any of this, that's a really retarded idea and is gonna make the result just more unpredictable
+                  # # Initialize variables to store the non-surname line and its length
+                  # db_list_filtered=""
+                  # max_length=0
 
-                  # Loop through each line and pick the one that does not mention "surname"
-                  while IFS= read -r line; do
-                    if [[ "$line" != *"surname"* ]]; then
-                      db_list_filtered="$line"
-                      # If the line is longer, update the max_length
-                      line_length=${#line}
-                      if [ "$line_length" -gt "$max_length" ]; then
-                        max_length="$line_length"
-                      fi
-                    fi
-                  done <<<"$result"
+                  # # Loop through each line and pick the one that does not mention "surname"
+                  # while IFS= read -r line; do
+                  #   if [[ "$line" != *"surname"* ]]; then
+                  #     db_list_filtered="$line"
+                  #     # If the line is longer, update the max_length
+                  #     line_length=${#line}
+                  #     if [ "$line_length" -gt "$max_length" ]; then
+                  #       max_length="$line_length"
+                  #     fi
+                  #   fi
+                  # done <<<"$result"
 
-                  # If no non-surname line found, pick the longest line
-                  if [ -z "$db_list_filtered" ]; then
-                    while IFS= read -r line; do
-                      line_length=${#line}
-                      if [ "$line_length" -gt "$max_length" ]; then
-                        max_length="$line_length"
-                        db_list_filtered="$line"
-                      fi
-                    done <<<"$result"
-                  fi
+                  # # If no non-surname line found, pick the longest line
+                  # if [ -z "$db_list_filtered" ]; then
+                  #   while IFS= read -r line; do
+                  #     line_length=${#line}
+                  #     if [ "$line_length" -gt "$max_length" ]; then
+                  #       max_length="$line_length"
+                  #       db_list_filtered="$line"
+                  #     fi
+                  #   done <<<"$result"
+                  # fi
 
-                  # Check if there are still more than one line after the first selection
-                  remaining_line_count=$(echo "$result" | wc -l)
-                  if [ "$remaining_line_count" -gt 1 ]; then
-                    # Pick the longest line among the remaining lines
-                    while IFS= read -r line; do
-                      line_length=${#line}
-                      if [ "$line_length" -gt "$max_length" ]; then
-                        max_length="$line_length"
-                        db_list_filtered="$line"
-                      fi
-                    done <<<"$result"
-                  fi
-                else
-                  # If there's only one line, set it as db_list_filtered
-                  db_list_filtered="$result"
+                  # # Check if there are still more than one line after the first selection
+                  # remaining_line_count=$(echo "$result" | wc -l)
+                  # if [ "$remaining_line_count" -gt 1 ]; then
+                  #   # Pick the longest line among the remaining lines
+                  #   while IFS= read -r line; do
+                  #     line_length=${#line}
+                  #     if [ "$line_length" -gt "$max_length" ]; then
+                  #       max_length="$line_length"
+                  #       db_list_filtered="$line"
+                  #     fi
+                  #   done <<<"$result"
+                #   fi
+                # else
+                #   # If there's only one line, set it as db_list_filtered
+                #   db_list_filtered="$result"
                 fi
               }
               filterDataBaseEntries
@@ -177,51 +180,58 @@ processText() {
             # make it a new variable
             temp_replace=$(echo "$line" | awk -v idx="$index" 'BEGIN{FS="/"} {if (idx >= 0 && idx < NF) print $idx}')
 
-            # make it so it will only proceed if we're still matching the right text.
-            # all barely works and it's better to skip entries than to have a wrong/broken DB
-            # so: check if text we're about to modify includes the text we're searching for to begin with
-            if [[ $temp_replace == *"$temp_full"* ]]; then
+            # make it so this is skipped if we decided it would be safer to do so, for whatever reason
+            if [[ $SKIP_LINE == false ]]; then
+              if [[ $temp_replace == *"$temp_full"* ]]; then
+                # make it so it will only proceed if we're still matching the right text.
+                # all barely works and it's better to skip entries than to have a wrong/broken DB
+                # so: check if text we're about to modify includes the text we're searching for to begin with
 
-              # Load a file with a blacklist of things to skip since we don't know how to work around some issues
-              # right now, and will this be manually speifying some things to skip
-              if ! grep -qF "$temp_full" "$databaseblacklist" 2>/dev/null; then
-                # Debug
-                echo -e "Reference found for:\n\"$temp_full\"\nFound in \n\"$line\""
-                # echo -e "Reference consists of the following data:\nHanzi (Simplified): \n$temp_hanzi\nPinyin: \n$temp_pinyin"
-                echo -e "Relevant dictionary entry/entries found in database: \n\"$temp_dictionaryentry\""
-                # echo "Conclusion: $temp_pinyin => [$temp_dictionaryentry_pinyin]"
+                # Load a file with a blacklist of things to skip since we don't know how to work around some issues
+                # right now, and will this be manually speifying some things to skip
+                if ! grep -qF "$temp_full" "$databaseblacklist" 2>/dev/null; then
+                  # Debug
+                  echo -e "Reference found for:\n\"$temp_full\"\nFound in \n\"$line\""
+                  # echo -e "Reference consists of the following data:\nHanzi (Simplified): \n$temp_hanzi\nPinyin: \n$temp_pinyin"
+                  echo -e "Relevant dictionary entry/entries found in database: \n\"$temp_dictionaryentry\""
+                  # echo "Conclusion: $temp_pinyin => [$temp_dictionaryentry_pinyin]"
 
-                echo -e "Line was: \n\"$line\""
-                echo -e "Line will be new: \n\"$new_line\""
-                echo -e "\n\n"
+                  echo -e "Line was: \n\"$line\""
+                  echo -e "Line will be new: \n\"$new_line\""
+                  echo -e "\n\n"
 
-                # write changes to db
-                # Escape slashes in the line and new_line to prevent issues with sed
-                escaped_line=$(printf "$line" | awk '{ gsub(/\//, "\\/"); print }')
-                escaped_new_line=$(printf "$new_line" | awk '{ gsub(/\//, "\\/"); print }')
+                  # write changes to db
+                  # Escape slashes in the line and new_line to prevent issues with sed
+                  escaped_line=$(printf "$line" | awk '{ gsub(/\//, "\\/"); print }')
+                  escaped_new_line=$(printf "$new_line" | awk '{ gsub(/\//, "\\/"); print }')
 
-                # Perform the search and replace using awk
-                awk -v line="$escaped_line" -v new_line="$escaped_new_line" '{ if ($0 == line) $0 = new_line } 1' "$database" >"$database.tmp"
+                  # Perform the search and replace using awk
+                  awk -v line="$escaped_line" -v new_line="$escaped_new_line" '{ if ($0 == line) $0 = new_line } 1' "$database" >"$database.tmp"
 
-                # Check if the backup already exists
-                if [ -e "$database.bak" ]; then
-                  # since backup already exists, just continue as usual
-                  mv "$database.tmp" "$database"
+                  # Check if the backup already exists
+                  if [ -e "$database.bak" ]; then
+                    # since backup already exists, just continue as usual
+                    mv "$database.tmp" "$database"
+                  else
+                    # since backup does not already exists, make a backup first
+                    cp "$database" "$database.bak"
+                    mv "$database.tmp" "$database"
+                  fi
                 else
-                  # since backup does not already exists, make a backup first
-                  cp "$database" "$database.bak"
-                  mv "$database.tmp" "$database"
+                  # Skipping due to blacklist
+                  echo "skipped due to blacklist: $line"
+                  true
                 fi
+
               else
-                # Skipping due to blacklist
-                echo "skipped due to blacklist: $line"
+                # Text would not have matched what we're looking for
                 true
+
               fi
-
+            elif [[ $SKIP_LINE == true ]]; then
+              echo "Skipped as it was unsafe to continue"
             else
-              # Text would not have matched what we're looking for
-              true
-
+              echo error
             fi
 
           fi
