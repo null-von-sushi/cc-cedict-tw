@@ -148,6 +148,8 @@ create_db() {
         echo "$TRADITIONAL  $SIMPLIFIED [$TWTRANSCRIPTION] $DEFINITIONS_SAVED" >>"$output_file"
       fi
     elif [ "$output_file_format" == "pleco" ]; then
+      # TODO Replace `/`` with ``
+      DEFINITIONS_SAVED=$(echo "$DEFINITIONS_SAVED" | sed 's|^/||; s|/$||' | sed 's/\///g')
       if [[ -z "$TWTRANSCRIPTION" ]]; then
         echo "$SIMPLIFIED[$TRADITIONAL]	$TRANSCRIPTION	$DEFINITIONS_SAVED" >>"$output_file"
       else
