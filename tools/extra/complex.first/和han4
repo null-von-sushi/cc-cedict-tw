@@ -53,7 +53,7 @@ elif line_exists "和 和 [han4] /(joining two nouns) and; together with; with (
     echo "Split 和 (\"with\", ROC version) into two entries, one for \"and\" and another for \"peace\""
 else
     echo "Error: The line \"和 和 [han4] /(joining two nouns)\" or \"和 和 [he2] /(joining two nouns)\" does not exist."
-    exit 1
+    #exit 1
 fi
 
 # Combine `和 和 [huo2] /to combine a powdery substance (flour, plaster etc) with water/Taiwan pr. [huo4]/` and `和 和 [huo4] /to mix (ingredients) together/to blend/classifier for rinses of clothes/classifier for boilings of medicinal herbs/`
@@ -89,5 +89,5 @@ elif line_exists "和 和 [huo4] /to combine a powdery substance (flour, plaster
     echo "Combined 和 (\"combine\" + \"mix\", ROC version) into one entry"
 else
     echo "Error: The line \"和 和 [huo4] /to combine\" & \"和 和 [huo4] /to mix\" or \"和 和 [huo2] /to combine\" & \"和 和 [huo4] /to mix\" does not exist."
-    exit 1
+    #exit 1
 fi
