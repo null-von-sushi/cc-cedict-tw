@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set this to a line to force --read to only read that specific line. WIP feature, will be used for something later
-checkline=500
+#checkline=500
 
 # Used for parameters
 read_flag=false
@@ -148,8 +148,7 @@ create_db() {
         echo "$TRADITIONAL  $SIMPLIFIED [$TWTRANSCRIPTION] $DEFINITIONS_SAVED" >>"$output_file"
       fi
     elif [ "$output_file_format" == "pleco" ]; then
-      # TODO Replace `/`` with ``
-      DEFINITIONS_SAVED=$(echo "$DEFINITIONS_SAVED" | sed 's|^/||; s|/$||' | sed 's/\///g')
+      DEFINITIONS_SAVED="$(echo $DEFINITIONS_SAVED | sed 's|^/||; s|/$||' | sed 's/\///g')"
       if [[ -z "$TWTRANSCRIPTION" ]]; then
         echo "$SIMPLIFIED[$TRADITIONAL]	$TRANSCRIPTION	$DEFINITIONS_SAVED" >>"$output_file"
       else
@@ -157,99 +156,6 @@ create_db() {
       fi
     else
       echo "Error writing data: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
-    fi
-
-    # Finished building the DB using CC-CEDICT or similar as base
-
-    # execute scripts in ./extra/complex.first or complex.last folder. Intended for any changes to the DB base before other things are done
-    extra_complex() {
-
-      # Change directory to relevant folder
-      cd ./extra/$1/
-
-      # Loop through all files in the directory and execute them using source (.)
-      for file in *; do
-        # Check if the file is executable
-        if [ -x "$file" ]; then
-          # Execute the file using source
-          source ./"$file"
-          # You can also use the following line instead, which is equivalent:
-          # source ./"$file"
-        else
-          chmod +x ./"$file"
-          source ./"$file"
-        fi
-      done
-    }
-    extra_complex complex.first
-
-    # remove empty linebreaks before headers are written
-    sed -i '/^$/d' $output_file
-
-    # Write headers
-    if [ "$output_file_format" == "u8" ]; then
-      # u8 / CC-CEDICT format
-      # Count the number of non-empty lines that do not start with '#'
-      count=$(awk '!/^#/ && NF > 0 { count++ } END { print count }' "$output_file")
-
-      #echo "Number of non-empty lines (excluding lines starting with '#'): $count"
-
-      # Create a temporary file for the header
-      temp_dbfile=$(mktemp)
-      temp_headerfile=$(mktemp)
-      #header
-      header_one=(
-        "# CC-CEDICT-TW"
-        "# 自由詞典"
-        "# "
-        "# Based on, but not affiliated with, CC-CEDICT published by MDBG"
-        "# "
-        "# License:"
-        "# Creative Commons Attribution-ShareAlike 4.0 International License"
-        "# https://creativecommons.org/licenses/by-sa/4.0/"
-        "# "
-        "# Referenced works:"
-        "# CEDICT - Copyright (C) 1997, 1998 Paul Andrew Denisowski"
-        "# CC-CEDICT - CC BY-SA 4.0 (https://www.mdbg.net/chinese/dictionary?page=cc-cedict)"
-        "# "
-        "# CC-CEDICT-TW can be found at:"
-        "# https://github.com/null-von-sushi/cc-cedict-tw"
-        "# "
-        "# ")
-
-      # Redirect the header to the temporary file we made
-      {
-        printf "%s\n" "${header_one[@]}"
-        echo "#! version=0"
-        echo "#! subversion=1"
-        echo "#! format=ts"
-        echo "#! charset=UTF-8"
-        echo "#! entries=$count"
-        echo "#! license=https://creativecommons.org/licenses/by-sa/4.0/"
-        echo "#! date=$(date -u +\"%Y-%m-%dT%H:%M:%S%Z\")"
-        echo "#! time=$(date +%s)"
-      } >"$temp_headerfile"
-
-      # Merge the deader and database we just made into a new temporary db file
-      cat "$temp_headerfile" $output_file >$temp_dbfile
-      # Replace DB with the new one we just made
-      mv $temp_dbfile $output_file # Overwrite db with the version containing the combined output
-
-      #  Remove the temporary files
-      rm "$temp_headerfile"
-
-      # fix formatting issues
-      # this one is for extra linebreaks and spaces at the end
-      sed -i -e 's/[[:space:]]*$//' -e '${/^$/d;}' $output_file
-
-      # this one is for the spacing between simp and trad
-      temp_dbfile=$(mktemp)
-      awk '{gsub(/[[:space:]]+/," ")}1' $output_file >$temp_dbfile
-      mv $temp_dbfile $output_file # replace db with the version we just fixed
-    elif [ "$output_file_format" == "pleco" ]; then
-      echo "Skipping header as Pleco does not use any"
-    else
-      echo "Error writing headers: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
     fi
   }
 
@@ -276,6 +182,104 @@ create_db() {
     done <"$database_file"
   fi
 
+  # remove empty linebreaks before headers are written
+  sed -i '/^$/d' $output_file
+
+  # Write headers
+  if [ "$output_file_format" == "u8" ]; then
+    # u8 / CC-CEDICT format
+    # Count the number of non-empty lines that do not start with '#'
+    count=$(awk '!/^#/ && NF > 0 { count++ } END { print count }' "$output_file")
+
+    #echo "Number of non-empty lines (excluding lines starting with '#'): $count"
+
+    # Create a temporary file for the header
+    temp_dbfile=$(mktemp)
+    temp_headerfile=$(mktemp)
+    #header
+    header_one=(
+      "# CC-CEDICT-TW"
+      "# 自由詞典"
+      "# "
+      "# Based on, but not affiliated with, CC-CEDICT published by MDBG"
+      "# "
+      "# License:"
+      "# Creative Commons Attribution-ShareAlike 4.0 International License"
+      "# https://creativecommons.org/licenses/by-sa/4.0/"
+      "# "
+      "# Referenced works:"
+      "# CEDICT - Copyright (C) 1997, 1998 Paul Andrew Denisowski"
+      "# CC-CEDICT - CC BY-SA 4.0 (https://www.mdbg.net/chinese/dictionary?page=cc-cedict)"
+      "# "
+      "# CC-CEDICT-TW can be found at:"
+      "# https://github.com/null-von-sushi/cc-cedict-tw"
+      "# "
+      "# ")
+
+    # Redirect the header to the temporary file we made
+    {
+      printf "%s\n" "${header_one[@]}"
+      echo "#! version=0"
+      echo "#! subversion=1"
+      echo "#! format=ts"
+      echo "#! charset=UTF-8"
+      echo "#! entries=$count"
+      echo "#! license=https://creativecommons.org/licenses/by-sa/4.0/"
+      echo "#! date=$(date -u +\"%Y-%m-%dT%H:%M:%S%Z\")"
+      echo "#! time=$(date +%s)"
+    } >"$temp_headerfile"
+
+    # Merge the deader and database we just made into a new temporary db file
+    cat "$temp_headerfile" $output_file >$temp_dbfile
+    # Replace DB with the new one we just made
+    mv $temp_dbfile $output_file # Overwrite db with the version containing the combined output
+
+    #  Remove the temporary files
+    rm "$temp_headerfile"
+
+    # fix formatting issues
+    # this one is for extra linebreaks and spaces at the end
+    sed -i -e 's/[[:space:]]*$//' -e '${/^$/d;}' $output_file
+
+    # this one is for the spacing between simp and trad
+    temp_dbfile=$(mktemp)
+    awk '{gsub(/[[:space:]]+/," ")}1' $output_file >$temp_dbfile
+    mv $temp_dbfile $output_file # replace db with the version we just fixed
+  elif [ "$output_file_format" == "pleco" ]; then
+    echo "Skipping header as Pleco does not use any"
+  else
+    echo "Error writing headers: cannot proceed because $output_file_format is not recognized as a format (this should be impossible...)"
+  fi
+
+  # Just to make sure, remove empty linebreaks before final scripts are executed
+  sed -i '/^$/d' $output_file
+
+  # Finished building the DB using CC-CEDICT or similar as base
+  # but only if output is u8, as this is the main format we are using.
+  if [ "$output_file_format" == "u8" ]; then
+    # execute scripts in ./extra/complex.first or complex.last folder. Intended for any changes to the DB base before other things are done
+    extra_complex() {
+
+      # Change directory to relevant folder
+      cd ./extra/$1/
+
+      # Loop through all files in the directory and execute them using source (.)
+      for file in *; do
+        # Check if the file is executable
+        if [ -x "$file" ]; then
+          # Execute the file using source
+          source ./"$file"
+          # You can also use the following line instead, which is equivalent:
+          # source ./"$file"
+        else
+          chmod +x ./"$file"
+          source ./"$file"
+        fi
+      done
+    }
+    extra_complex complex.first
+  fi
+
 }
 
 help_lines=(
@@ -292,6 +296,10 @@ help_lines=(
   "--format   Select between \"u8\" (default) and \"pleco\" formats for output file"
   "--create   Create a new database file"
   "--read     Don't create anything, just read an existing database file"
+  " "
+  "Please note that the \"pleco\" format may not support everything. For best results, create a u8"
+  "file first, then run the script on the created file to turn the u8 into a pleco file."
+  "This is because the post processing does not support pleco directly, so some important edits may be skipped"
 )
 
 # Parse command line arguments
