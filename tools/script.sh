@@ -7,6 +7,13 @@
 read_flag=false
 header_flag=false
 output_file_format="u8"
+DEBUG=true
+
+dprint() {
+  if [[ $DEBUG == true ]]; then
+    echo "$1"
+  fi
+}
 
 # Function to replace text after Chinese characters with correct transcription
 replace_transcriptions() {
@@ -108,7 +115,7 @@ create_db() {
     # Extract traditional and simplified
     TRADITIONAL=$(echo "$line" | awk -F ' ' '{print $1}')
     SIMPLIFIED=$(echo "$line" | awk -F ' ' '{print $2}')
-
+    dprint "TRADITIONAL: $TRADITIONAL, SIMPLIFIED $SIMPLIFIED"
     # Extract the transcription
     temp="${line}"
     TRANSCRIPTION=$(echo "$temp" | awk -F '[[]' '{print $2}' | awk -F ']' '{print $1}')
@@ -118,11 +125,15 @@ create_db() {
 
     # Reset TWTRANSCRIPTION
     TWTRANSCRIPTION=""
-
+    dprint "DEFINITIONS: $DEFINITIONS"
     # Check if TW transcription is present
-    if [[ "$DEFINITIONS" =~ "Taiwan pr\\. \\[[A-Za-z0-9 ]+\\]\\/" ]]; then
+
+    if [[ $DEFINITIONS =~ Taiwan\ pr\.\ \[[A-Za-z0-9[:space:]]+\] ]]; then
+      # ❯ echo "trash, refuse, garbage, (coll.) of poor quality, Taiwan pr. [le4 se4]" | grep -P "Taiwan pr\. \[[A-Za-z0-9[:space:]]+\]"
+      dprint "Found TW definition!"
       # Extract TW transcription
       TWTRANSCRIPTION=$(echo "$DEFINITIONS" | awk -F 'Taiwan pr. \\[' '{print $2}' | awk -F '\\]' '{print $1}' | tr -d '\n')
+
       # Make a new definion for TW centric entries
       TWDEFINITIONS=""
       TWDEFINITIONS=$(echo "$DEFINITIONS" | sed -E "s/Taiwan pr. \[(.+?)\]/PRC pr. [$TRANSCRIPTION]/g")
