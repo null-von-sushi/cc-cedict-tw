@@ -7,7 +7,7 @@
 read_flag=false
 header_flag=false
 output_file_format="u8"
-DEBUG=true
+DEBUG=false
 
 dprint() {
   if [[ $DEBUG == true ]]; then
