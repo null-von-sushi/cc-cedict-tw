@@ -272,10 +272,10 @@ create_db() {
     extra_complex() {
 
       # Change directory to relevant folder
-      cd ./extra/$1/
+      includefiles="extra/$1/"
 
       # Loop through all files in the directory and execute them using source (.)
-      for file in *; do
+      for file in "$includefiles"*; do
         # Check if the file is executable
         if [ -x "$file" ]; then
           # Execute the file using source
@@ -289,7 +289,79 @@ create_db() {
       done
     }
     extra_complex complex.first
+
+    line_exists() {
+      grep -Fq "$1" "$output_file"
+    }
+
+    # Function to replace a line with another using awk
+    replace_line() {
+      1=$(echo "$1" | sed 's/\[/\\\[/g' | sed 's/\]/\\\]/g')
+      2=$(echo "$2" | sed 's/\[/\\\[/g' | sed 's/\]/\\\]/g')
+      awk -i inplace -v old="$1" -v new="$2" '{gsub(old, new)} 1' "$output_file"
+    }
+
+    # Process replacements
+    echo "Replacing entries as defined in extra/replace/"
+    echo "Input file will be output of last process: $output_file"
+
+    # Define the directory path
+    includefiles="extra/replace/"
+
+    # Use a for loop to iterate through files in the directory
+    for file in "$includefiles"*; do
+      # reset variables
+      OLD=""
+      NEW=""
+      WHY=""
+      # Load lines to edit
+      source "$file"
+      if line_exists "$OLD"; then
+        temp_filtered_content=$(mktemp)
+
+        # Use grep -v to exclude the lines containing the search string and save to another temp file
+        grep -Fv "$OLD" "$output_file" >$temp_filtered_content
+
+        # Append the modified content to the filtered file
+        echo "$NEW" >>$temp_filtered_content
+
+        # Replace the original file with the modified content
+        mv $temp_filtered_content "$output_file"
+        echo "Done: $WHY"
+      else
+        echo "Processing: $WHY"
+        echo "Error: The line \"$OLD\" does not exist. Skipping..."
+      fi
+    done
   fi
+
+  # Add new definitions
+  echo "Adding definitions from extra/include/"
+  echo "Input file will be output of last process: $output_file"
+
+  # Define the directory path
+  includefiles="extra/include/"
+
+  # Use a for loop to iterate through files in the directory
+  for file in "$includefiles"*; do
+    # reset variables
+    NEW=""
+    WHY=""
+    # Load lines to edit
+    source "$file"
+    if line_exists "$NEW"; then
+      echo "Processing: $WHY"
+      echo "Error: The line \"$NEW\" already exists. Skipping..."
+
+    else
+      temp_filtered_content=$(mktemp)
+
+      # Append the modified content to the filtered file
+      echo "$NEW" >>"$output_file"
+      echo "Done: $WHY"
+    fi
+
+  done
 
 }
 
