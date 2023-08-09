@@ -1,0 +1,59 @@
+#!/bin/bash
+echo "Input file will be output of last process: $output_file"
+
+# Function to check if a line exists in the file
+line_exists() {
+    grep -Fq "$1" "$output_file"
+}
+
+# Function to replace a line with another using awk
+replace_line() {
+    1=$(echo "$1" | sed 's/\[/\\\[/g' | sed 's/\]/\\\]/g')
+    2=$(echo "$2" | sed 's/\[/\\\[/g' | sed 's/\]/\\\]/g')
+    awk -i inplace -v old="$1" -v new="$2" '{gsub(old, new)} 1' "$output_file"
+}
+
+# reserve temp file
+temp_filtered_content=$(mktemp)
+
+echo ""
+
+# Edit old 會 to fix wrong pronounciation and add new entry for bound form moment`
+if line_exists "會 会 [hui3] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (PRC pr. [hui4])/"; then
+    remove_line="會 会 [hui3] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (PRC pr. [hui4])/"
+    replacement_line1="會 会 [hui4] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/"
+    replacement_line2="會 会 [hui3] /(bound form) a moment (PRC pr. [hui4])/"
+    temp_filtered_content=$(mktemp)
+
+    # Use grep -v to exclude the lines containing the search string and save to another temp file
+    grep -Fv "$remove_line" "$output_file" >$temp_filtered_content
+
+    # Append the modified content to the filtered file
+    echo "$replacement_line1" >>$temp_filtered_content
+    echo "$replacement_line2" >>$temp_filtered_content
+
+    # Replace the original file with the modified content
+    mv $temp_filtered_content "$output_file"
+    echo $output_file
+    echo "Edit 會 (wrong due to post-processing bugs) to fix wrong pronounciation and add new entry for bound form (hui3)"
+# Split `和 和 [han4] /(joining two nouns) and; together with; with (PRC pr. [he2])/(math.) sum/to make peace/(sports) to draw; to tie/(bound form) harmonious/(bound form) Japan; Japanese/`
+elif line_exists "會 会 [hui4] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (Taiwan pr. [hui3])/"; then
+    remove_line="會 会 [hui4] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (Taiwan pr. [hui3])/"
+    replacement_line1="會 会 [hui4] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/"
+    replacement_line2="會 会 [hui3] /(bound form) a moment (PRC pr. [hui4])/"
+
+    # Use grep -Fv to exclude the lines containing the search string and save to another temp file. -F is necessary to make grep treat the string as a string, not regex.
+    grep -Fv "$remove_line" "$output_file" >$temp_filtered_content
+
+    # Append the modified content to the filtered file
+    echo "$replacement_line1" >>$temp_filtered_content
+    echo "$replacement_line2" >>$temp_filtered_content
+
+    # Replace the original file with the modified content
+    mv $temp_filtered_content "$output_file"
+    echo $output_file
+    echo "Edit 會 to set right pronounciation and split off bound form (hui3) into new entry"
+else
+    echo "Error: The line \"會 会 [hui3] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (PRC pr. [hui4])/" or \"會 会 [hui4] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (Taiwan pr. [hui3])/\" does not exist."
+    #exit 1
+fi
