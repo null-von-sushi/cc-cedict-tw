@@ -335,7 +335,9 @@ create_db() {
     done
   fi
 
+
   # Add new definitions
+  if [ "$output_file_format" == "u8" ]; then
   echo "Adding definitions from extra/include/"
   echo "Input file will be output of last process: $output_file"
 
@@ -360,8 +362,8 @@ create_db() {
       echo "$NEW" >>"$output_file"
       echo "Done: $WHY"
     fi
-
   done
+  fi
 
 }
 
