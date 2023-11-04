@@ -54,6 +54,6 @@ elif line_exists "會 会 [hui4] /can; to have the skill; to know how to/to be l
     echo $output_file
     echo "Edit 會 to set right pronounciation and split off bound form (hui3) into new entry"
 else
-    echo "Error: The line \"會 会 [hui3] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (PRC pr. [hui4])/" or \"會 会 [hui4] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (Taiwan pr. [hui3])/\" does not exist."
+    echo "Error: The line \"會 会 [hui3] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (PRC pr. [hui4])/\" or \"會 会 [hui4] /can; to have the skill; to know how to/to be likely to; to be sure to/to meet; to get together/meeting; gathering/(suffix) union; group; association/(bound form) a moment (Taiwan pr. [hui3])/\" does not exist."
     #exit 1
 fi
