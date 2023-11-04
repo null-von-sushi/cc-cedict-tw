@@ -5,3 +5,4 @@ tools/temp.test
 tools/temp.test
 tools/out.txt
 tools/temp.test
+*.test
