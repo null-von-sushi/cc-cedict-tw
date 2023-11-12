@@ -1,9 +1,6 @@
-
-*.u8
 tools/tmp/cc-cedict-tw.u8.blacklist
 tools/temp.test
 tools/temp.test
 tools/out.txt
 tools/temp.test
 *.test
-*.pleco
