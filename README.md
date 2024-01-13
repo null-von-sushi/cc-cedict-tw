@@ -7,6 +7,7 @@ Specifically, this dictionary will have the followding main differeces/goals com
 - Use the pronounciation from the Republic of China (Taiwan) where applicable.
 - Incorporate any slang or neologisms used by the international community that isn't already in CC-CEDICT (such as terms used by BBC, ABC or similar communities).
 - Edit any definitions, if neessary (in practice, this has not been necessary as CC-CEDIT has done an amazing job at keeping the language politically neutral. Of course, a dictionary is big, so if something pops up in the future, it will be dealt with accordingly. In the interest of transparency, this readme will be updated to include a list of words with their description altered in meaning.
+Regarding this, the only major edits have been that some words have had `(PRC)` added, while the `(Tw)` ones had it removed to indicate which is the *default*.
 
 # License
 
