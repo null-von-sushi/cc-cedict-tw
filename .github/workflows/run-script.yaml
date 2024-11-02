@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run Bash Script
         run: |
@@ -21,7 +21,7 @@ jobs:
         # If the input file is uploaded, you could replace `input-file.txt` with `${{ github.event.inputs.file }}`
 
       - name: Upload output file
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Pleco_Dict.txt
           path: cc-cedict-tw-NEW.pleco
