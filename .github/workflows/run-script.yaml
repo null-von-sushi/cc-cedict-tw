@@ -12,7 +12,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      - name: Run Bash Script
+      - name: Convert u8 to Pleco
         run: |
           # Make sure the script is executable
           chmod +x tools/script.sh
