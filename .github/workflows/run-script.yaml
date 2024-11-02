@@ -1,0 +1,27 @@
+name: Create Pleco file from master
+
+on:
+  workflow_dispatch: # This allows users to manually trigger the action
+  push: # Optional: Run on pushes to the main branch
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Run Bash Script
+        run: |
+          # Make sure the script is executable
+          chmod +x tools/script.sh
+          # Run your script with any necessary arguments
+          ./tools/script.sh --create --input=cc-cedict-tw.u8 --output=cc-cedict-tw-NEW.pleco --format=pleco
+        # If the input file is uploaded, you could replace `input-file.txt` with `${{ github.event.inputs.file }}`
+
+      - name: Upload output file
+        uses: actions/upload-artifact@v2
+        with:
+          name: Pleco_Dict.txt
+          path: cc-cedict-tw-NEW.pleco
