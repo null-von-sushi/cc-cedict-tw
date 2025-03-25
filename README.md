@@ -14,6 +14,7 @@ If you are not interested in this, feel free to use CC-CEDICT (the upstream), Pl
 # Style guide / common abreviations
  - As ~~CC-CEDICT started it~~seems to be the default for dictionaries, we will keep things lowercase by default
  - `PRC pr.`/`(PRC)` is used to indicated the pronounciation used in the area controlled by the People's Republic of China. Meanwhile `TW pr. `/`(TW)` indicates something is relating to Taiwan (note this is rare, as Taiwanese pronounciation is considered standard), though since we are a fork of CC-CEDICT you may see this every now and then because resources are limited and not every dictionary entry has been checked/processed yet.
+ - `(mainly Singapore)` used in CC-CEDICT, deprecated. We use `(Singapore)` instead to be consistant with the PRC related entries.
  - `(slang)` indicates it's slang while `(neologism)` indicates it's a newly created word
  - `(from XXX)` indicates the source language a term comes from. This is usually appended to words that have their roots in Cantonese, Japanese or even Taiwanese.
 
