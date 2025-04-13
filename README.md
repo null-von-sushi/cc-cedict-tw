@@ -7,7 +7,7 @@ Specifically, this dictionary will have the followding main differeces/goals com
 - Use the pronounciation from the Republic of China (Taiwan) where applicable.
 - Incorporate any slang or neologisms used by the international community that isn't already in CC-CEDICT (such as terms used by BBC, ABC or similar communities). This will include Cantonese or Japanese slang or loanwords.
 - Edit any major definitions, if neessary. Most changes will be in new words added, old ones mostly just change to switch the focus on the ROC usage of the word as default, while having the PRC usage as a sidenote. For a list of changes just check the commit history. 
-- u8 file format uses `lv` for lü, not `lu:`, and `lve` instead of `lu:e` for lüe.
+- u8 file format is the same as [CC-CEDICT](https://cc-cedict.org/wiki/format:syntax), except it uses `lv` for lü, not `lu:`, and `lve` instead of `lu:e` for lüe. If for some reason you want to convert this file to be compatible with something that supports the upstream CC-CEDICT only, it's trivial to do so in a text editor with just a search and replace.
 
 Please note that this project is not endorsed by any organization or any peoples. I am doing this for myself mostly, out of personal interest as I believe that other dictionaries are biased towards PRC style Chinese. This is my attempt to balance the scales. 
 If you are not interested in this, feel free to use CC-CEDICT (the upstream), Pleco, Hanping, search on Baidu itself or use one of the other bazillion mainland-China-centric dictionaries that exist.
@@ -18,6 +18,7 @@ If you are not interested in this, feel free to use CC-CEDICT (the upstream), Pl
  - `(mainly Singapore)` used in CC-CEDICT, deprecated. We use `(Singapore)` instead to be consistant with the PRC related entries.
  - `(slang)` indicates it's slang while `(neologism)` indicates it's a newly created word
  - `(from XXX)` indicates the source language a term comes from. This is usually appended to words that have their roots in Cantonese, Japanese or even Taiwanese.
+ - Counters are to be written at the end of the line, seperated by a western comma, if necessary (example: `新聞 新闻 [xin1 wen2] /news/CL:條|条[tiao2],個|个[ge4]/`).
 
 # License
 
