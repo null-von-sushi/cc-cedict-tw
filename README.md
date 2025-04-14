@@ -1,25 +1,65 @@
-# 自由詞典
+# CC-CEDICT-TW / 自由詞典
 
-## An attempt to make a dictionary that doesn't ratify the vocabulary or pronounciations of the People's Republic of China, but instead uses vocabulary often found in free areas.
+**An attempt to make a dictionary that doesn't ratify the vocabulary or pronounciations of the People's Republic of China, but instead uses vocabulary often found in free areas.**
 
-Specifically, this dictionary will have the followding main differeces/goals compared to CC-CEDICT:
+This project is based on the CC-CEDICT dataset, but it diverges in significant ways to better align with Mandarin pronunciation, usage and vocabulary spoken in the Republic of China (Taiwan), Hong Kong and overseas communities,  Its primary goal is to offer an alternative to the PRC-centric resources that dominate the field of Mandarin dictionaries.
 
-- Use the pronounciation from the Republic of China (Taiwan) where applicable.
-- Incorporate any slang or neologisms used by the international community that isn't already in CC-CEDICT (such as terms used by BBC, ABC or similar communities). This will include Cantonese or Japanese slang or loanwords.
-- Edit any major definitions, if neessary. Most changes will be in new words added, old ones mostly just change to switch the focus on the ROC usage of the word as default, while having the PRC usage as a sidenote. For a list of changes just check the commit history. 
-- u8 file format is the same as [CC-CEDICT](https://cc-cedict.org/wiki/format:syntax), except it uses `lv` for lü, not `lu:`, `nv` for `nü` instead of `nv:`, and `lve` instead of `lu:e` for lüe. If for some reason you want to convert this file to be compatible with something that supports the upstream CC-CEDICT only, it's trivial to do so in a text editor with just a search and replace.
+---
 
-Please note that this project is not endorsed by any organization or any peoples. I am doing this for myself mostly, out of personal interest as I believe that other dictionaries are biased towards PRC style Chinese. This is my attempt to balance the scales. 
-If you are not interested in this, feel free to use CC-CEDICT (the upstream), Pleco, Hanping, search on Baidu itself or use one of the other bazillion mainland-China-centric dictionaries that exist.
+## Key Differences and Goals
 
-# Style guide / common abreviations
- - As ~~CC-CEDICT started it~~seems to be the default for dictionaries, we will keep things lowercase by default
- - `PRC pr.`/`(PRC)` is used to indicated the pronounciation used in the area controlled by the People's Republic of China. Meanwhile `TW pr. `/`(TW)` indicates something is relating to Taiwan (note this is rare, as Taiwanese pronounciation is considered standard), though since we are a fork of CC-CEDICT you may see this every now and then because resources are limited and not every dictionary entry has been checked/processed yet.
- - `(mainly Singapore)` used in CC-CEDICT, deprecated. We use `(Singapore)` instead to be consistant with the PRC related entries.
- - `(slang)` indicates it's slang while `(neologism)` indicates it's a newly created word
- - `(from XXX)` indicates the source language a term comes from. This is usually appended to words that have their roots in Cantonese, Japanese or even Taiwanese.
- - Counters are to be written at the end of the line, seperated by a western comma, if necessary (example: `新聞 新闻 [xin1 wen2] /news/CL:條|条[tiao2],個|个[ge4]/`).
+This dictionary has the following main differences and goals compared to the original CC-CEDICT:
 
-# License
+- **Pronunciation from the Republic of China (Taiwan)**: Where applicable, the dictionary uses pronunciation standards from Taiwan, as opposed to the the People's Republic of China (PRC) standard.
+- **Incorporation of International Slang and Neologisms**: New terms and slang, especially those used by international communities (e.g., BBC, ABC, or similar), will be included. This may also include loanwords from Cantonese or Japanese.
+- **Edited Definitions**: Some definitions have been edited to reflect the Taiwanese usage of words. While most entries remain unchanged, new words have been added and existing ones may have Taiwan-centric definitions as the default, with PRC usage as a sidenote. For specific changes, refer to the commit history.
+- **U8 File Format Compatibility**: The file format for this dictionary follows the [CC-CEDICT format](https://cc-cedict.org/wiki/format:syntax), with minor modifications:
+  - `lv` for lü, not `lu:`.
+  - `nv` for `nü`, not `nv:`.
+  - `lve` for `lüe`, not `lu:e`.
+  
+If you need to convert the file back to be compatible with CC-CEDICT’s upstream format, it’s easy to do using a text editor with a simple search-and-replace operation.
 
-This project, due to it's use of [CC-CEDICT](https://www.mdbg.net/chinese/dictionary?page=cc-cedict), is under the "Creative Commons Attribution-ShareAlike 4.0 International License". To quote the CC-CEDICT website: "It more or less means that you are allowed to use this data for both non-commercial and commercial purposes provided that you: mention where you got the data from (attribution) and that in case you improve / add to the data you will share these changes under the same license (share alike)."
+---
+
+## Purpose and Disclaimer
+
+This project is not officially endorsed by any organization or government. It was created out of personal interest as a response to the prevalence of PRC-centric dictionaries and lack of ROC focused ones. This is my attempt to balanced the scales and offer learners of 正題國語 a more useful reference. If this project doesn't align with your interests, feel free to use the upstream CC-CEDICT, Pleco, Hanping, or any of the other many mainland China-focused resources available.
+
+---
+
+## Style Guide and Common Abbreviations
+
+To maintain consistency with existing conventions in CC-CEDICT or similar dictionaries, the following style guidelines are used:
+
+- **Default lowercase**: As is common in CC-CEDICT and similar dictionaries, words are written in lowercase by default.
+- **Pronunciation Labels**:
+  - `PRC pr.` or `(PRC)` indicates the pronunciation used in Mainland China (People’s Republic of China).
+  - `TW pr.` or `(TW)` indicates the pronunciation used in Taiwan (Republic of China). This is relatively rare as Taiwanese pronunciation is often considered standard.
+- **Singapore Usage**: The label `(mainly Singapore)` in CC-CEDICT is deprecated. We use `(Singapore)` for consistency with the PRC-related entries (locations should be labelled `(location name)`).
+- **Slang and Neologisms**:
+  - `(slang)` denotes informal, colloquial terms.
+  - `(neologism)` indicates newly created or coined words.
+- **Source Language**: `(from XXX)` is used to indicate terms borrowed from another language (e.g., Cantonese, Japanese, Taiwanese).
+- **Counters**: When applicable, counters are placed at the end of the line, separated by a Western comma (e.g., `新聞 新闻 [xin1 wen2] /news/CL:條|条[tiao2],個|个[ge4]/`).
+
+---
+
+## License
+
+This project, due to its use of the [CC-CEDICT](https://www.mdbg.net/chinese/dictionary?page=cc-cedict) dataset, is licensed under the **Creative Commons Attribution-ShareAlike 4.0 International License**. 
+
+### License Details:
+- **Attribution**: You are free to use the data for both non-commercial and commercial purposes, but you must attribute the source.
+- **ShareAlike**: If you modify or add to the data, you must share these changes under the same license.
+
+For more details, see the [full license](https://creativecommons.org/licenses/by-sa/4.0/).
+
+---
+
+## Acknowledgments
+
+Special thanks to the contributors of [CC-CEDICT](https://www.mdbg.net/chinese/dictionary?page=cc-cedict) for providing the base dataset.
+Also a shoutout to pleco for basically being the best dictionary that exists so far. 
+
+---
