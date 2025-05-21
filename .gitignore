@@ -5,3 +5,4 @@ tools/out.txt
 tools/temp.test
 *.test
 .README.md.kate-swp
+.DS_Store
