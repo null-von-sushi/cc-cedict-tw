@@ -34,9 +34,9 @@ To maintain consistency with existing conventions in CC-CEDICT or similar dictio
 
 - **Default lowercase**: As is common in CC-CEDICT and similar dictionaries, words are written in lowercase by default.
 - **Pronunciation Labels**:
-  - `PRC pr.` or `(PRC)` indicates the pronunciation used in Mainland China (People’s Republic of China).
-  - `TW pr.` or `(TW)` indicates the pronunciation used in Taiwan (Republic of China). This is relatively rare as Taiwanese pronunciation is often considered standard.
-- **Singapore Usage**: The label `(mainly Singapore)` in CC-CEDICT is deprecated. We use `(Singapore)` for consistency with the PRC-related entries (locations should be labelled `(location name)`).
+  - `PRC pr.` or `(PRC)` indicates the pronunciation or usage in mainland China (officially the People’s Republic of China).
+  - `TW pr.` or `(TW)` indicates the pronunciation used in Taiwan (Republic of China). This should be relatively to see, as Taiwanese pronunciation will be considered standard.
+- **Singapore Usage etc.**: The label `(mainly Singapore)` in CC-CEDICT is deprecated. We use `(Singapore)` for consistency with the PRC-related entries (other locations should be labelled `(location name)`).
 - **Slang and Neologisms**:
   - `(slang)` denotes informal, colloquial terms.
   - `(neologism)` indicates newly created or coined words.
